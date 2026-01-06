@@ -1,0 +1,5 @@
+{
+  "name": "Smart Task Flow",
+  "description": "Một ứng dụng danh sách công việc thông minh với tính năng quản lý trạng thái, thời gian và tích hợp trí tuệ nhân tạo Gemini để gợi ý kế hoạch chi tiết.",
+  "requestFramePermissions": []
+}
