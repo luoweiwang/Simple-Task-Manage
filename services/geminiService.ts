@@ -1,13 +1,12 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { TaskStatus, TaskPriority, AISuggestion } from "../types";
 import { CONFIG } from "../config";
 
-// Khởi tạo an toàn: Nếu không có API_KEY, các hàm sẽ trả về null thay vì crash app
+// Khởi tạo client Gemini - Sử dụng process.env.API_KEY được AI Studio cung cấp tự động
 const getAIClient = () => {
-  const apiKey = CONFIG.GEMINI.API_KEY || (typeof process !== 'undefined' ? process.env.API_KEY : '');
+  const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    console.warn("Gemini API Key is missing. AI features will be disabled.");
+    console.warn("AI Studio chưa cung cấp API_KEY.");
     return null;
   }
   return new GoogleGenAI({ apiKey });
@@ -20,7 +19,7 @@ export const getSmartTaskAdvice = async (title: string, description: string): Pr
   try {
     const response = await ai.models.generateContent({
       model: CONFIG.GEMINI.MODEL,
-      contents: `Hãy phân tích công việc sau và đưa ra gợi ý:
+      contents: [{ parts: [{ text: `Hãy phân tích công việc sau và đưa ra gợi ý:
       Tiêu đề: ${title}
       Mô tả: ${description}
       
@@ -29,7 +28,7 @@ export const getSmartTaskAdvice = async (title: string, description: string): Pr
         "suggestedPriority": "Thấp" | "Trung bình" | "Cao" | "Khẩn cấp",
         "suggestedSubTasks": string[],
         "tips": string (lời khuyên ngắn gọn để hoàn thành tốt)
-      }`,
+      }` }]}],
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -47,10 +46,7 @@ export const getSmartTaskAdvice = async (title: string, description: string): Pr
       }
     });
 
-    const text = response.text;
-    if (!text) return null;
-
-    const result = JSON.parse(text);
+    const result = JSON.parse(response.text || '{}');
     return result as AISuggestion;
   } catch (error) {
     console.error("Gemini AI Error:", error);
@@ -60,19 +56,19 @@ export const getSmartTaskAdvice = async (title: string, description: string): Pr
 
 export const getSummaryAdvice = async (tasks: any[]): Promise<string> => {
   const ai = getAIClient();
-  if (!ai) return "AI hiện chưa được cấu hình. Vui lòng kiểm tra API Key.";
+  if (!ai) return "AI hiện chưa được cấu hình.";
   
   if (tasks.length === 0) return "Bạn chưa có công việc nào. Hãy bắt đầu bằng cách thêm một task mới!";
   
   try {
     const response = await ai.models.generateContent({
       model: CONFIG.GEMINI.MODEL,
-      contents: `Đây là danh sách công việc của tôi: ${JSON.stringify(tasks)}. 
-      Hãy đưa ra một nhận xét ngắn gọn (tối đa 3 câu) về khối lượng công việc và lời khuyên nên ưu tiên làm gì ngay bây giờ.`
+      contents: [{ parts: [{ text: `Đây là danh sách công việc của tôi: ${JSON.stringify(tasks)}. 
+      Hãy đưa ra một nhận xét ngắn gọn (tối đa 2 câu) bằng tiếng Việt về khối lượng công việc và lời khuyên nên ưu tiên làm gì.` }]}]
     });
     
     return response.text || "Không nhận được phản hồi từ AI.";
   } catch (error) {
-    return "Không thể kết nối với trí tuệ nhân tạo lúc này.";
+    return "Không thể kết nối với AI lúc này.";
   }
 };
