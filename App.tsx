@@ -8,6 +8,7 @@ import { PlusIcon, SparklesIcon, CheckIcon, LinkIcon } from './components/Icons'
 import { getSummaryAdvice } from './services/geminiService';
 import { databaseService } from './services/databaseService';
 import { supabase } from './services/supabaseClient';
+import { CONFIG } from './config';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
@@ -59,7 +60,7 @@ const App: React.FC = () => {
   };
 
   const handleShareApp = () => {
-    const url = window.location.href;
+    const url = CONFIG.APP.BASE_URL;
     navigator.clipboard.writeText(url);
     setShowShareToast(true);
     setTimeout(() => setShowShareToast(false), 3000);
@@ -193,7 +194,7 @@ const App: React.FC = () => {
             </div>
             <div className="flex flex-col">
               <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent leading-none">
-                SmartTask Flow
+                {CONFIG.APP.NAME}
               </h1>
               <div className="flex items-center gap-1 mt-1">
                 <div className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-amber-400 animate-pulse' : 'bg-green-500'}`}></div>
