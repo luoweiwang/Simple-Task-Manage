@@ -6,13 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Task Flow</title>
     
-    <!-- Polyfill cho process.env để tránh lỗi ReferenceError trong runtime -->
+    <!-- Polyfill tối giản để ngăn lỗi process is not defined ở runtime -->
     <script>
-        window.process = {
-            env: {
-                NODE_ENV: 'production'
-            }
-        };
+        if (typeof window !== 'undefined') {
+            window.process = window.process || { env: { NODE_ENV: 'production' } };
+        }
     </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -59,7 +57,7 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- Vite sẽ xử lý file .tsx này và chuyển đổi thành .js hợp lệ cho trình duyệt -->
-    <script type="module" src="./index.tsx"></script>
+    <!-- Vite sẽ xử lý file .tsx này và chuyển đổi thành bundle hoàn chỉnh -->
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>
