@@ -47,7 +47,10 @@ export const getSmartTaskAdvice = async (title: string, description: string): Pr
       }
     });
 
-    const result = JSON.parse(response.text);
+    const text = response.text;
+    if (!text) return null;
+
+    const result = JSON.parse(text);
     return result as AISuggestion;
   } catch (error) {
     console.error("Gemini AI Error:", error);
@@ -67,7 +70,8 @@ export const getSummaryAdvice = async (tasks: any[]): Promise<string> => {
       contents: `Đây là danh sách công việc của tôi: ${JSON.stringify(tasks)}. 
       Hãy đưa ra một nhận xét ngắn gọn (tối đa 3 câu) về khối lượng công việc và lời khuyên nên ưu tiên làm gì ngay bây giờ.`
     });
-    return response.text;
+    
+    return response.text || "Không nhận được phản hồi từ AI.";
   } catch (error) {
     return "Không thể kết nối với trí tuệ nhân tạo lúc này.";
   }
