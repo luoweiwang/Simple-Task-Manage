@@ -3,10 +3,20 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { TaskStatus, TaskPriority, AISuggestion } from "../types";
 import { CONFIG } from "../config";
 
-// Always use named parameter and direct process.env.API_KEY
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Khởi tạo an toàn: Nếu không có API_KEY, các hàm sẽ trả về null thay vì crash app
+const getAIClient = () => {
+  const apiKey = CONFIG.GEMINI.API_KEY || (typeof process !== 'undefined' ? process.env.API_KEY : '');
+  if (!apiKey) {
+    console.warn("Gemini API Key is missing. AI features will be disabled.");
+    return null;
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 export const getSmartTaskAdvice = async (title: string, description: string): Promise<AISuggestion | null> => {
+  const ai = getAIClient();
+  if (!ai) return null;
+
   try {
     const response = await ai.models.generateContent({
       model: CONFIG.GEMINI.MODEL,
@@ -46,6 +56,9 @@ export const getSmartTaskAdvice = async (title: string, description: string): Pr
 };
 
 export const getSummaryAdvice = async (tasks: any[]): Promise<string> => {
+  const ai = getAIClient();
+  if (!ai) return "AI hiện chưa được cấu hình. Vui lòng kiểm tra API Key.";
+  
   if (tasks.length === 0) return "Bạn chưa có công việc nào. Hãy bắt đầu bằng cách thêm một task mới!";
   
   try {
