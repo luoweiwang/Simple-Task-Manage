@@ -42,69 +42,81 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDelete, onEdit, onToggleDon
   const isCompleted = task.status === TaskStatus.DONE;
 
   return (
-    <div className={`group bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all duration-300 relative ${isCompleted ? 'opacity-75' : ''}`}>
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex flex-wrap gap-2">
-          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${getPriorityColor(task.priority)}`}>
-            {task.priority}
-          </span>
-          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${getStatusColor(task.status)}`}>
-            {task.status}
-          </span>
+    <div className={`group bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 relative flex flex-col ${isCompleted ? 'opacity-75' : ''}`}>
+      {task.image_url && (
+        <div className="w-full aspect-video overflow-hidden border-b border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950">
+          <img 
+            src={task.image_url} 
+            alt={task.title} 
+            className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" 
+          />
         </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button 
-            onClick={handleShareTask}
-            title="Chia sẻ nội dung task"
-            className={`p-1.5 rounded-lg transition-colors ${copied ? 'text-green-600 bg-green-50 dark:bg-green-900/20' : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}
-          >
-            {copied ? <CheckIcon /> : <ShareIcon />}
-          </button>
-          <button 
-            onClick={() => onEdit(task)}
-            className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-          </button>
-          <button 
-            onClick={() => onDelete(task.id)}
-            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-          >
-            <TrashIcon />
-          </button>
-        </div>
-      </div>
-
-      <h3 className={`text-lg font-bold text-gray-800 dark:text-gray-100 mb-2 leading-tight ${isCompleted ? 'line-through text-gray-500 dark:text-gray-600' : ''}`}>
-        {task.title}
-      </h3>
+      )}
       
-      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">
-        {task.description || "Không có mô tả."}
-      </p>
+      <div className="p-5 flex-1 flex flex-col">
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex flex-wrap gap-2">
+            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${getPriorityColor(task.priority)}`}>
+              {task.priority}
+            </span>
+            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${getStatusColor(task.status)}`}>
+              {task.status}
+            </span>
+          </div>
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button 
+              onClick={handleShareTask}
+              title="Chia sẻ nội dung task"
+              className={`p-1.5 rounded-lg transition-colors ${copied ? 'text-green-600 bg-green-50 dark:bg-green-900/20' : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}
+            >
+              {copied ? <CheckIcon /> : <ShareIcon />}
+            </button>
+            <button 
+              onClick={() => onEdit(task)}
+              className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+            </button>
+            <button 
+              onClick={() => onDelete(task.id)}
+              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        </div>
 
-      <div className="space-y-2 pt-3 border-t border-gray-50 dark:border-slate-800">
-        <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-          <CalendarIcon />
-          <span>Bắt đầu: {new Date(task.startTime).toLocaleString('vi-VN')}</span>
+        <h3 className={`text-lg font-bold text-gray-800 dark:text-gray-100 mb-2 leading-tight ${isCompleted ? 'line-through text-gray-500 dark:text-gray-600' : ''}`}>
+          {task.title}
+        </h3>
+        
+        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 flex-1">
+          {task.description || "Không có mô tả."}
+        </p>
+
+        <div className="space-y-2 pt-3 border-t border-gray-50 dark:border-slate-800">
+          <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+            <CalendarIcon />
+            <span>Bắt đầu: {new Date(task.startTime).toLocaleString('vi-VN')}</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+            <CalendarIcon />
+            <span>Kết thúc: {new Date(task.endTime).toLocaleString('vi-VN')}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-          <CalendarIcon />
-          <span>Kết thúc: {new Date(task.endTime).toLocaleString('vi-VN')}</span>
-        </div>
+
+        <button 
+          onClick={() => onToggleDone(task.id)}
+          className={`mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all ${
+            isCompleted 
+            ? 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700' 
+            : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-800/50'
+          }`}
+        >
+          <CheckIcon />
+          {isCompleted ? 'Đã hoàn thành' : 'Đánh dấu hoàn thành'}
+        </button>
       </div>
-
-      <button 
-        onClick={() => onToggleDone(task.id)}
-        className={`mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all ${
-          isCompleted 
-          ? 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700' 
-          : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-800/50'
-        }`}
-      >
-        <CheckIcon />
-        {isCompleted ? 'Đã hoàn thành' : 'Đánh dấu hoàn thành'}
-      </button>
     </div>
   );
 };

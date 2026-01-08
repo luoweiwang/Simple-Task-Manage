@@ -1,3 +1,4 @@
+
 import { Task } from "../types";
 import { supabase } from "./supabaseClient";
 
@@ -36,5 +37,30 @@ export const databaseService = {
       console.error("Lỗi khi xóa task khỏi Supabase:", error.message);
       throw error;
     }
+  },
+
+  async uploadImage(file: File, userId: string): Promise<string> {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+    // Lưu ảnh vào thư mục mang tên userId để dễ quản lý RLS Policy
+    const filePath = `${userId}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('task-attachments')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error("Lỗi upload ảnh:", uploadError.message);
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from('task-attachments')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
   }
 };

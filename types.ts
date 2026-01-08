@@ -24,6 +24,7 @@ export interface Task {
   endTime: string;
   createdAt: number;
   subTasks: string[];
+  image_url?: string;
 }
 
 export interface AISuggestion {

@@ -83,7 +83,8 @@ const App: React.FC = () => {
             startTime: taskData.startTime || new Date().toISOString(),
             endTime: taskData.endTime || new Date().toISOString(),
             createdAt: Date.now(),
-            subTasks: taskData.subTasks || []
+            subTasks: taskData.subTasks || [],
+            image_url: taskData.image_url
           };
 
       await databaseService.upsertTask(taskToSave);
@@ -95,7 +96,7 @@ const App: React.FC = () => {
       }
       setIsModalOpen(false);
     } catch (error) {
-      alert("Lỗi khi lưu dữ liệu lên hệ thống.");
+      alert("Lỗi khi lưu dữ liệu lên hệ thống. Hãy đảm bảo bạn đã chạy câu lệnh SQL để thêm cột image_url.");
     }
   };
 

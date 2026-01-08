@@ -1,8 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Task, TaskStatus, TaskPriority } from '../types';
-import { SparklesIcon } from './Icons';
+import { SparklesIcon, ImageIcon, XIcon } from './Icons';
 import { getSmartTaskAdvice } from '../services/geminiService';
+import { databaseService } from '../services/databaseService';
+import { supabase } from '../services/supabaseClient';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -19,7 +21,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, editTask
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [subTasks, setSubTasks] = useState<string[]>([]);
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editTask) {
@@ -30,6 +36,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, editTask
       setStartTime(editTask.startTime);
       setEndTime(editTask.endTime);
       setSubTasks(editTask.subTasks || []);
+      setImageUrl(editTask.image_url);
     } else {
       setTitle('');
       setDescription('');
@@ -39,6 +46,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, editTask
       setStartTime(new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
       setEndTime(new Date(now.getTime() - now.getTimezoneOffset() * 60000 + 3600000).toISOString().slice(0, 16));
       setSubTasks([]);
+      setImageUrl(undefined);
     }
   }, [editTask, isOpen]);
 
@@ -54,6 +62,27 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, editTask
     setIsAiLoading(false);
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert("Vui lòng đăng nhập lại để thực hiện tải ảnh.");
+        return;
+      }
+
+      const url = await databaseService.uploadImage(file, session.user.id);
+      setImageUrl(url);
+    } catch (err: any) {
+      alert(`Lỗi khi tải ảnh: ${err.message || "Vui lòng kiểm tra RLS Policy trên Supabase"}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -62,7 +91,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, editTask
         <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-gray-50/50 dark:bg-slate-950/50">
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{editTask ? 'Chỉnh sửa công việc' : 'Thêm công việc mới'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <XIcon />
           </button>
         </div>
         
@@ -98,6 +127,40 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, editTask
                 className="w-full border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
                 placeholder="Mô tả chi tiết công việc..."
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Đính kèm ảnh tham khảo</label>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden" 
+                accept="image/*" 
+              />
+              
+              {imageUrl ? (
+                <div className="relative group rounded-xl overflow-hidden border border-gray-200 dark:border-slate-800 aspect-video">
+                  <img src={imageUrl} alt="Tham khảo" className="w-full h-full object-cover" />
+                  <button 
+                    onClick={() => setImageUrl(undefined)}
+                    className="absolute top-2 right-2 bg-black/50 hover:bg-red-500 text-white p-1.5 rounded-full transition-colors"
+                  >
+                    <XIcon />
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="w-full border-2 border-dashed border-gray-200 dark:border-slate-800 rounded-xl p-6 flex flex-col items-center justify-center gap-2 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-all"
+                >
+                  <div className="p-3 bg-gray-100 dark:bg-slate-800 rounded-full">
+                    <ImageIcon />
+                  </div>
+                  <span className="text-sm font-medium">{isUploading ? 'Đang tải ảnh...' : 'Bấm để tải ảnh lên'}</span>
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -165,11 +228,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, editTask
             Hủy
           </button>
           <button
-            onClick={() => onSave({ title, description, status, priority, startTime, endTime, subTasks })}
-            disabled={!title}
+            onClick={() => onSave({ title, description, status, priority, startTime, endTime, subTasks, image_url: imageUrl })}
+            disabled={!title || isUploading}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg font-medium transition-colors shadow-lg shadow-blue-200 dark:shadow-none disabled:bg-blue-300 dark:disabled:bg-blue-900"
           >
-            Lưu công việc
+            {isUploading ? 'Đang xử lý...' : 'Lưu công việc'}
           </button>
         </div>
       </div>
